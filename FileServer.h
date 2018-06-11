@@ -2,80 +2,93 @@
 #pragma once
 #include "ConfigDefine.h"
 #include "Message.h"
-#include <string>     
-#include <cstdlib>//必须包含
+
 class FileServer
 {
 public:
-    unsigned long fileSize;
-    unsigned long transCount;
-    unsigned long lastTimeSize;
-    char fileOrGra;//种类标记
-    std:: string fileName;
-    std:: string path;
-    std:: string sender;
-    std:: string receiver;
+    unsigned long fileSize = 0;
+    unsigned long transCount = 0;
+    unsigned long lastTimeSize = 0;
+    char fileOrGra = 0;//种类标记
+    std:: string fileName = "";
+    std:: string path = "C:\\Users\\Mark.Wen\\Desktop\\SupremeChat\\";
+    std:: string sender = "";
+    std:: string receiver = "";
 
     FileServer(Message fileCheckMsg)
     //客户传给服务器的文件确认报文
     //文件确认报文格式 （用户 -> 服务器 ）F_C_M|sender|receiver|file_info
      //file_info格式 transConut|lastTimeSize|fileName|FILE_MSG或GRAPH_MSG
     {
-        sender=fileCheckMsg.sender;
-        receiver=fileCheckMsg.receiver;
-       //transcount
-        int index=0;
-        std::string number="";
-        while(fileCheckMsg.message[index]!='|')
+        sender = fileCheckMsg.sender;
+        receiver = fileCheckMsg.receiver;
+        //transcount
+        int index = 0;
+        std::string number = "";
+        while (fileCheckMsg.message[index] != '|')
         {
-            number=number+fileCheckMsg.message[index];
+            number = number + fileCheckMsg.message[index];
             index++;
         }
-         transCount=atol(number.c_str());
+        transCount = atol(number.c_str());
 
-         //Lastimesize index=|
-         index++;
-         number="";
-        while(fileCheckMsg.message[index]!='|')
+        //Lastimesize index=|
+        index++;
+        number = "";
+        while (fileCheckMsg.message[index] != '|')
         {
-            number=number+fileCheckMsg.message[index];
+            number = number + fileCheckMsg.message[index];
             index++;
         }
-          lastTimeSize =atol(number.c_str());
-          //fileName
-          index++;
-          number="";
-          while(fileCheckMsg.message[index]!='|')
-          {
-            number=number+fileCheckMsg.message[index];
+        lastTimeSize = atol(number.c_str());
+        //fileName
+        index++;
+        number = "";
+        while (fileCheckMsg.message[index] != '|')
+        {
+            number = number + fileCheckMsg.message[index];
             index++;
-          }
-          fileName=number;
+        }
+        fileName = number;
 
-          //index==|
-          index++;
-          fileOrGra=fileCheckMsg.message[index];
+        //index==|
+        index++;
+        fileOrGra = fileCheckMsg.message[index];
+        fileSize = transCount * CACHE_LENGTH + lastTimeSize;
     }
     //传入一个文件确认报文
+
+
     FileServer(int a){;}
 
     std:: string toString()
-    //服务器发给客户的文件确认报文
-   {
-  //文件确认报文格式 (服务器->用户) F_C_M|sender|fileName|file_info
-   //file_info格式 transCount|lastTimeSize|FILE_MSG或GRAPH_MSG 
-    std::string message="";
-    message.push_back(FILE_CHECK_MSG);
-    message=message+sender+receiver+fileName+"|"+std::to_string(transCount)+"|"+std::to_string(lastTimeSize)+"|";
-    message.push_back(fileOrGra);
-   }
+    //生成如下格式的字符串
+    //文件确认报文格式 (服务器->用户) F_C_M|sender|receiver|fileName|file_info
+    //file_info格式 transCount|lastTimeSize|flagOrGra 
+    //FILE_CHECK_MSG
+    {
+        std::string message = "";
+        message.push_back(FILE_CHECK_MSG);
+        message = "|" + message + sender + "|" + receiver + "|"
+         + fileName + "|" + std::to_string(transCount) + "|" + 
+        std::to_string(lastTimeSize) + "|";
+        message.push_back(fileOrGra);
+        
+        return message;
+    }
+
 };
 
 class FileList 
 {
 public:
-    unsigned int size;
+    unsigned int size = 0;
     std:: vector<FileServer> fileCache;
+
+    FileList()
+    {
+        fileCache.clear();
+    }
 
     void push_cache(FileServer f)
     {
